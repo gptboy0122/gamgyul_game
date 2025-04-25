@@ -16,11 +16,11 @@
       justify-content: center;
     }
     .container {
+      width: 320px;
       background-color: #fff8e1;
       padding: 20px;
       border-radius: 20px;
       box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-      width: 320px;
       text-align: center;
     }
     h1 {
@@ -109,7 +109,6 @@
       font-family: 'Apple SD Gothic Neo', 'Noto Sans KR', sans-serif;
       margin-top: 1rem;
     }
-    .hidden { display: none; }
     .fruit {
       transform: rotateY(0deg);
       transition: transform 0.3s ease, opacity 0.3s ease;
@@ -160,6 +159,7 @@
     let timer;
     let interval;
     let streak = 0;
+    let isTransitioning = false;
 
     function getRandomFruit() {
       if (stage < 3) {
@@ -170,7 +170,7 @@
     }
 
     function updateGrid() {
-      if (grid.classList.contains('hidden')) return;
+      if (grid.classList.contains('hidden') || isTransitioning) return;
       grid.innerHTML = '';
       let 감귤개수 = 0;
       const 감귤확률 = [0.5, 0.4, 0.3, 0.2, 0.1];
@@ -190,11 +190,11 @@
           if (fruit === target) 감귤개수++;
           cell.innerHTML = `<div class="fruit">${fruit}</div>`;
           cell.classList.add('flip-in');
-          cell.onclick = (event) => {
-          if (cell.classList.contains('clicked')) return;
-          cell.classList.add('clicked');
-          handleClick(fruit);
-        };
+          cell.onclick = () => {
+            if (isTransitioning || cell.classList.contains('clicked')) return;
+            cell.classList.add('clicked');
+            handleClick(fruit);
+          };
         }
         grid.appendChild(cell);
       }
@@ -205,6 +205,7 @@
         cell.innerHTML = `<div class="fruit">${target}</div>`;
         cell.classList.add('flip-in');
         cell.onclick = () => {
+          if (isTransitioning || cell.classList.contains('clicked')) return;
           cell.classList.add('clicked');
           handleClick(target);
         };
@@ -218,10 +219,14 @@
     }
 
     function handleClick(fruit) {
+      if (isTransitioning) return;
       if (fruit === target) {
         streak++;
         updateStatus();
-        if (streak >= 5) {
+        if (streak === 5) {
+          isTransitioning = true;
+          clearInterval(timer);
+          clearInterval(interval);
           message.textContent = `🎉 스테이지 ${stage + 1}로 넘어갑니다!`;
           setTimeout(() => {
             message.textContent = '';
@@ -238,6 +243,7 @@
       stage = 1;
       time = 10;
       streak = 0;
+      isTransitioning = false;
       message.textContent = '';
       startBtn.style.display = 'none';
       progress.classList.add('active');
@@ -263,6 +269,7 @@
     function startStage() {
       clearInterval(timer);
       clearInterval(interval);
+      isTransitioning = false;
       time = 10;
       progressBar.style.width = '100%';
       timer = setInterval(() => {
