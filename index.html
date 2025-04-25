@@ -138,7 +138,7 @@
   </div>
 
   <script>
-    const fruits = ['🍇', '🍊', '🍑', '🫐', '🍋', '🍌', '🥝', '🍍'];
+    const fruits = ['🍇', '🍊', '🍑', '🫐', '🍋', '🍌', '🥝', '🍍', '🦐'];
     const target = '🍊';
     const grid = document.getElementById('grid');
     const progress = document.getElementById('progress');
@@ -160,6 +160,8 @@
     let interval;
     let streak = 0;
     let isTransitioning = false;
+let gameEnded = false;
+let shrimpAppeared = 0;
 
     function getRandomFruit() {
       if (stage < 3) {
@@ -173,11 +175,16 @@
       if (grid.classList.contains('hidden') || isTransitioning) return;
       grid.innerHTML = '';
       let 감귤개수 = 0;
-      const 감귤확률 = [0.5, 0.4, 0.3, 0.2, 0.1];
+      const 감귤확률 = [0.5, 0.4, 0.3, 0.2, 0.15]; // 하향 조정
       const 전체확률 = [0.6, 0.55, 0.5, 0.45, 0.4];
+      const 쉬림프확률 = 0.001;
 
       const fruitChance = 전체확률[Math.min(stage - 1, 4)];
       const gamgyulChance = 감귤확률[Math.min(stage - 1, 4)];
+
+      let shrimpCount = 0;
+      const shrimpLimitPerStage = 4;
+      const shrimpAlreadySpawned = shrimpAppeared >= shrimpLimitPerStage;
 
       for (let i = 0; i < 9; i++) {
         const cell = document.createElement('div');
@@ -186,7 +193,13 @@
         let fruit = '';
 
         if (chance < fruitChance) {
-          fruit = Math.random() < gamgyulChance ? target : getRandomFruit();
+          if (!shrimpAlreadySpawned && Math.random() < 쉬림프확률 && !grid.innerHTML.includes('🦐')) {
+            fruit = '🦐';
+            shrimpCount++;
+            shrimpAppeared++;
+          } else {
+            fruit = Math.random() < gamgyulChance ? target : getRandomFruit();
+          }
           if (fruit === target) 감귤개수++;
           cell.innerHTML = `<div class="fruit">${fruit}</div>`;
           cell.classList.add('flip-in');
@@ -219,7 +232,22 @@
     }
 
     function handleClick(fruit) {
+      if (isTransitioning || gameEnded) return;
       if (isTransitioning) return;
+      if (fruit === '🦐') {
+        isTransitioning = true;
+        clearInterval(timer);
+        clearInterval(interval);
+        message.textContent = '🦐 새우 출몰!!';
+        setTimeout(() => {
+          message.textContent = `🎉 스테이지 ${stage + 1}로 넘어갑니다!`;
+          setTimeout(() => {
+            message.textContent = '';
+            nextStage();
+          }, 1500);
+        }, 1000);
+        return;
+      }
       if (fruit === target) {
         streak++;
         updateStatus();
@@ -244,6 +272,7 @@
       time = 10;
       streak = 0;
       isTransitioning = false;
+      gameEnded = false;
       message.textContent = '';
       startBtn.style.display = 'none';
       progress.classList.add('active');
@@ -262,6 +291,7 @@
       clearInterval(timer);
       clearInterval(interval);
       stage++;
+      shrimpAppeared = 0;
       streak = 0;
       startStage();
     }
@@ -282,6 +312,7 @@
     }
 
     function gameOver() {
+      gameEnded = true;
       clearInterval(timer);
       clearInterval(interval);
       const results = [
