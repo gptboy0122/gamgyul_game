@@ -165,10 +165,7 @@ let shrimpAppeared = 0;
 let shrimpQuota = 0;
 
     function getRandomFruit() {
-      if (stage < 3) {
-        const reduced = fruits.filter(f => f !== '🍑');
-        return reduced[Math.floor(Math.random() * reduced.length)];
-      }
+      
       if (stage === 5) {
         const weighted = fruits.concat(['🍑', '🍑']);
         return weighted[Math.floor(Math.random() * weighted.length)];
@@ -312,7 +309,7 @@ let shrimpQuota = 0;
         progressBar.style.width = (time * 10) + '%';
         if (time <= 0) gameOver();
       }, 1000);
-      const stageSpeed = [900, 800, 700, 610, 510];
+      const stageSpeed = [800, 750, 700, 610, 510];
       interval = setInterval(updateGrid, stageSpeed[Math.min(stage - 1, 4)]);
       updateGrid();
     }
