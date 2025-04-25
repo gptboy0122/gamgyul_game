@@ -169,6 +169,10 @@ let shrimpQuota = 0;
         const reduced = fruits.filter(f => f !== '🍑');
         return reduced[Math.floor(Math.random() * reduced.length)];
       }
+      if (stage === 5) {
+        const weighted = fruits.concat(['🍑', '🍑']);
+        return weighted[Math.floor(Math.random() * weighted.length)];
+      }
       return fruits[Math.floor(Math.random() * fruits.length)];
     }
 
@@ -177,7 +181,7 @@ let shrimpQuota = 0;
       if (grid.classList.contains('hidden') || isTransitioning) return;
       grid.innerHTML = '';
       let 감귤개수 = 0;
-      const 감귤확률 = [0.5, 0.4, 0.3, 0.2, 0.15]; // 하향 조정
+      const 감귤확률 = [0.5, 0.4, 0.3, 0.2, 0.15];
       const 전체확률 = [0.6, 0.55, 0.5, 0.45, 0.4];
       const 쉬림프확률 = 0.0005;
 
@@ -208,7 +212,7 @@ let shrimpQuota = 0;
           if (fruit === target) 감귤개수++;
           cell.innerHTML = `<div class="fruit">${fruit}</div>`;
           cell.classList.add('flip-in');
-          cell.onclick = () => {
+          cell.ontouchstart = cell.onclick = () => {
             if (isTransitioning || cell.classList.contains('clicked')) return;
             cell.classList.add('clicked');
             handleClick(fruit);
@@ -217,20 +221,8 @@ let shrimpQuota = 0;
         grid.appendChild(cell);
       }
 
-      if (감귤개수 === 0 && stage <= 4) {
-        const idx = Math.floor(Math.random() * 9);
-        const cell = grid.children[idx];
-        cell.innerHTML = `<div class="fruit">${target}</div>`;
-        cell.classList.add('flip-in');
-        cell.onclick = () => {
-          if (isTransitioning || cell.classList.contains('clicked')) return;
-          cell.classList.add('clicked');
-          handleClick(target);
-        };
-      }
-
       updateStatus();
-    }
+    } // <- updateGrid 함수 끝 괄호 복원
 
     function updateStatus() {
       statusBar.textContent = `현재 스테이지: ${stage} | 잡은 감귤: ${streak}개`;
@@ -260,7 +252,7 @@ let shrimpQuota = 0;
           isTransitioning = true;
           clearInterval(timer);
           clearInterval(interval);
-          message.textContent = `🎉 스테이지 ${stage + 1}로 넘어갑니다!`;
+          if (stage < 5) message.textContent = `🎉 스테이지 ${stage + 1}로 넘어갑니다!`;
           setTimeout(() => {
             message.textContent = '';
             nextStage();
@@ -320,7 +312,8 @@ let shrimpQuota = 0;
         progressBar.style.width = (time * 10) + '%';
         if (time <= 0) gameOver();
       }, 1000);
-      interval = setInterval(updateGrid, Math.max(900 - stage * 100, 300));
+      const stageSpeed = [900, 800, 700, 610, 510];
+      interval = setInterval(updateGrid, stageSpeed[Math.min(stage - 1, 4)]);
       updateGrid();
     }
 
