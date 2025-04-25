@@ -138,7 +138,7 @@
   </div>
 
   <script>
-    const fruits = ['🍇', '🍊', '🍑', '🫐', '🍋', '🍌', '🥝', '🍍', '🦐'];
+    const fruits = ['🍇', '🍊', '🍑', '🫐', '🍋', '🍌', '🥝', '🍍'];
     const target = '🍊';
     const grid = document.getElementById('grid');
     const progress = document.getElementById('progress');
@@ -162,6 +162,7 @@
     let isTransitioning = false;
 let gameEnded = false;
 let shrimpAppeared = 0;
+let shrimpQuota = 0;
 
     function getRandomFruit() {
       if (stage < 3) {
@@ -172,18 +173,20 @@ let shrimpAppeared = 0;
     }
 
     function updateGrid() {
+      const isFirstFrame = time === 10;
       if (grid.classList.contains('hidden') || isTransitioning) return;
       grid.innerHTML = '';
       let 감귤개수 = 0;
       const 감귤확률 = [0.5, 0.4, 0.3, 0.2, 0.15]; // 하향 조정
       const 전체확률 = [0.6, 0.55, 0.5, 0.45, 0.4];
-      const 쉬림프확률 = 0.001;
+      const 쉬림프확률 = 0.0005;
 
       const fruitChance = 전체확률[Math.min(stage - 1, 4)];
       const gamgyulChance = 감귤확률[Math.min(stage - 1, 4)];
 
       let shrimpCount = 0;
-      const shrimpLimitPerStage = 4;
+      let shrimpInThisGrid = false;
+      const shrimpLimitPerStage = 2;
       const shrimpAlreadySpawned = shrimpAppeared >= shrimpLimitPerStage;
 
       for (let i = 0; i < 9; i++) {
@@ -193,10 +196,12 @@ let shrimpAppeared = 0;
         let fruit = '';
 
         if (chance < fruitChance) {
-          if (!shrimpAlreadySpawned && Math.random() < 쉬림프확률 && !grid.innerHTML.includes('🦐')) {
+          if (!isFirstFrame && !shrimpInThisGrid && shrimpQuota > 0 && Math.random() < 0.2 && shrimpCount < 1) {
             fruit = '🦐';
             shrimpCount++;
+            shrimpQuota--;
             shrimpAppeared++;
+            shrimpInThisGrid = true;
           } else {
             fruit = Math.random() < gamgyulChance ? target : getRandomFruit();
           }
@@ -240,7 +245,7 @@ let shrimpAppeared = 0;
         clearInterval(interval);
         message.textContent = '🦐 새우 출몰!!';
         setTimeout(() => {
-          message.textContent = `🎉 스테이지 ${stage + 1}로 넘어갑니다!`;
+          message.textContent = `🎉 스테이지 ${Math.min(stage + 1, 5)}로 넘어갑니다!`;
           setTimeout(() => {
             message.textContent = '';
             nextStage();
@@ -290,6 +295,13 @@ let shrimpAppeared = 0;
     function nextStage() {
       clearInterval(timer);
       clearInterval(interval);
+      if (stage >= 5) {
+        message.innerHTML = '감귤 멸망. <br/>당신으로 인해 감귤 없는 세상이 도래했습니다.🌏';
+        startBtn.textContent = '다시 시작';
+        startBtn.style.display = 'inline-block';
+        progress.classList.remove('active');
+        return;
+      }
       stage++;
       shrimpAppeared = 0;
       streak = 0;
@@ -297,6 +309,7 @@ let shrimpAppeared = 0;
     }
 
     function startStage() {
+      shrimpQuota = (stage >= 4) ? Math.floor(Math.random() * 2) : 0; // 스테이지 4,5만 새우 등장, 0~1개
       clearInterval(timer);
       clearInterval(interval);
       isTransitioning = false;
